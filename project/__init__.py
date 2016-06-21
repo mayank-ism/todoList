@@ -30,7 +30,9 @@ pool.apply_async(cronjob,[])
 def send_mail(recipient, message):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
-    server.login("reminderfortodo@gmail.com", "todo@practo")
+    email = ""
+    password = ""
+    server.login(email, password)
     server.sendmail("reminderfortodo@gmail.com", recipient, message)
     server.quit()
 
