@@ -4,7 +4,9 @@ from flask import Flask, request, jsonify, session
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from project.config import BaseConfig
-import datetime, json, sys, collections, requests, smtplib
+import datetime, json, sys, collections, requests, smtplib, logging
+
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
 # config
 
@@ -20,12 +22,13 @@ from multiprocessing import Pool
 
 def cronjob():
     cron = CronTab()
-    job = cron.new(command = 'curl http://127.0.0.1:5000/api/reminder', comment = "Reminding all users of jobs to be completed today.")
+    job = cron.new(command = 'curl http://127.0.0.1:5000/api/reminder', 
+        comment = "Reminding all users of jobs to be completed today.")
     job.setall('0 0 * * *')
     job.run()
 
 pool = Pool(processes = 1)
-pool.apply_async(cronjob,[]) 
+pool.apply_async(cronjob,[])
 
 def send_mail(recipient, message):
     server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -69,12 +72,14 @@ def register():
     try:
     	db.session.add(user)
     	db.session.commit()
-    	status = 'success'
+        success = True
+    	message = 'success'
     except:
-    	status = 'user already exists'
+        success = False
+    	message = 'user already exists'
 
     db.session.close()
-    return jsonify({'result' : status})
+    return jsonify({'result' : success, 'message' : message})
 
 
 @app.route('/api/login', methods=['POST'])
@@ -84,18 +89,20 @@ def login():
 
     if user and bcrypt.check_password_hash(user.password, json_data['password']):
     	session['logged_in'] = True
-    	status = 'success'
+        success = True
+    	message = 'success'
     else:
-    	status = 'authentication error'
+        success = False
+    	message = 'authentication error'
 
-    return jsonify({'result' : status})
+    return jsonify({'result' : success, 'message' : message})
 
 
 @app.route('/api/logout', methods=['GET'])
 def logout():
     json_data = request.json
     session.pop('logged_in', None)
-    return jsonify({'result' : 'success'})
+    return jsonify({'result' : True})
 
 @app.route('/api/status', methods = ['GET'])
 def status():
@@ -108,7 +115,7 @@ def status():
 @app.route('/api/list/<user_id>', methods = ['GET','POST'])
 def api_todo_list(user_id):
     if request.method == 'GET':
-        all_tasks_for_user =  User.query.filter_by(id = user_id).first().tasks.all() 
+        all_tasks_for_user =  User.query.filter_by(id = user_id).first().tasks.all()
         list_of_tasks = []
 
         for task in all_tasks_for_user:
@@ -131,26 +138,30 @@ def api_todo_list(user_id):
         try:
             db.session.add(task)
             db.session.commit()
-            status = 'success'
+            message = 'success'
+            success = True
         except:
-            status = 'unable to record task'
+            message = 'unable to record task'
+            success = False
 
         db.session.close()
-        return jsonify({'status' : status})
+        return jsonify({'status' : success, 'message' : message})
 
 @app.route('/api/list/delete/<task_id>', methods = ['DELETE'])
 def api_delete_task(task_id):
     try:
         to_delete = List.query.filter_by(id = task_id).first()
-        
+
         if to_delete is not None:
             db.session.delete(to_delete)
             db.session.commit()
-        status = 'success'
+        message = 'success'
+        success = True
     except Exception as ex:
-        status = 'error in deleting ' + task_id + ", Exception: " + ex
+        message = 'error in deleting ' + task_id + ", Exception: " + ex
+        success = False
 
-    return jsonify({'status' : status})
+    return jsonify({'status' : success, 'message' : message})
 
 @app.route('/api/list/update/<task_id>',methods = ['PUT'])
 def api_update_task(task_id):
@@ -166,10 +177,13 @@ def api_update_task(task_id):
             deadline = datetime.date(year,month,date)
             to_update.deadline = deadline
             db.session.commit()
-            status = 'success'
+            message = 'success'
+            success = True
         else:
-            status = 'no element with task_id = ' + task_id
+            message = 'no element with task_id = ' + task_id
+            success = False
     except Exception as ex:
-        status = "Exception: " + ex 
+        message = "Exception: " + ex
+        success = False
 
-    return jsonify({'status' : status})
+    return jsonify({'status' : success, 'message' : message})
