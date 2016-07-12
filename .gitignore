@@ -8,4 +8,3 @@ env.sh
 blog.md
 migrations
 _old
-curl_test_queries/*

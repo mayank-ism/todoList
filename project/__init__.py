@@ -4,9 +4,7 @@ from flask import Flask, request, jsonify, session
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from project.config import BaseConfig
-import datetime, json, sys, collections, requests, smtplib, logging
-
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+import datetime, json, collections, requests, smtplib
 
 # config
 
@@ -17,19 +15,6 @@ bcrypt = Bcrypt(app)
 db = SQLAlchemy(app)
 
 from project.models import User, List
-from crontab import CronTab
-from multiprocessing import Pool
-
-def cronjob():
-    cron = CronTab()
-    api_request = 'curl http://127.0.0.1:5000/api/reminder'
-    job = cron.new(command = api_request, 
-        comment = "Reminding all users of jobs to be completed today.")
-    job.setall('0 0 * * *')
-    job.run()
-
-pool = Pool(processes = 1)
-pool.apply_async(cronjob,[])
 
 def send_mail(recipient, message):
     server = smtplib.SMTP('smtp.gmail.com', 587)
@@ -90,6 +75,7 @@ def login():
 
     if user and bcrypt.check_password_hash(user.password, json_data['password']):
     	session['logged_in'] = True
+        session['user_id'] = user.id
         success = True
     	message = 'success'
     else:
@@ -102,6 +88,7 @@ def login():
 @app.route('/api/logout', methods=['GET'])
 def logout():
     session.pop('logged_in', None)
+    session.pop('user_id', None)
     return jsonify({'result' : True})
 
 @app.route('/api/status', methods = ['GET'])
@@ -112,40 +99,44 @@ def status():
     else:
         return jsonify({'status' : False})
 
-@app.route('/api/list/<user_id>', methods = ['GET','POST'])
-def api_todo_list(user_id):
-    if request.method == 'GET':
-        all_tasks_for_user =  User.query.filter_by(id = user_id).first().tasks.all()
-        list_of_tasks = []
+@app.route('/api/list', methods = ['GET','POST'])
+def api_todo_list():
+    if session.get('user_id'):
+        user_id = session['user_id']
+        if request.method == 'GET':
+            all_tasks_for_user =  User.query.filter_by(id = user_id).first().tasks.all()
+            list_of_tasks = []
 
-        for task in all_tasks_for_user:
-            d = collections.OrderedDict()
-            d['task'] = task.task
-            d['deadline'] = unicode(task.deadline)
-            list_of_tasks.append(d)
+            for task in all_tasks_for_user:
+                d = collections.OrderedDict()
+                d['task'] = task.task
+                d['deadline'] = unicode(task.deadline)
+                list_of_tasks.append(d)
 
-        return jsonify({'task_list' : json.dumps(list_of_tasks)})
+            return jsonify({'task_list' : json.dumps(list_of_tasks)})
+        else:
+            json_data = request.json
+            date = int(json_data['deadline_date'])
+            month = int(json_data['deadline_month'])
+            year = int(json_data['deadline_year'])
+            deadline = datetime.date(year,month,date)
+            owner = User.query.filter_by(id = user_id).first()
+
+            task = List(task = json_data['task'], deadline = deadline, owner = owner)
+
+            try:
+                db.session.add(task)
+                db.session.commit()
+                message = 'success'
+                success = True
+            except:
+                message = 'unable to record task'
+                success = False
+
+            db.session.close()
+            return jsonify({'status' : success, 'message' : message})
     else:
-        json_data = request.json
-        date = int(json_data['deadline_date'])
-        month = int(json_data['deadline_month'])
-        year = int(json_data['deadline_year'])
-        deadline = datetime.date(year,month,date)
-        owner = User.query.filter_by(id = user_id).first()
-
-        task = List(task = json_data['task'], deadline = deadline, owner = owner)
-
-        try:
-            db.session.add(task)
-            db.session.commit()
-            message = 'success'
-            success = True
-        except:
-            message = 'unable to record task'
-            success = False
-
-        db.session.close()
-        return jsonify({'status' : success, 'message' : message})
+        return jsonify({'status' : False, 'message' : "user must be logged in"})
 
 @app.route('/api/list/delete/<task_id>', methods = ['DELETE'])
 def api_delete_task(task_id):
