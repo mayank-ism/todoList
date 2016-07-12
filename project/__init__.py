@@ -101,7 +101,6 @@ def login():
 
 @app.route('/api/logout', methods=['GET'])
 def logout():
-    json_data = request.json
     session.pop('logged_in', None)
     return jsonify({'result' : True})
 
