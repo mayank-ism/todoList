@@ -43,4 +43,5 @@ class List(db.Model):
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     task = db.Column(db.String(140), nullable = False)
     deadline = db.Column(db.DateTime, nullable = False)
+    completed = db.Column(db.Boolean, nullable = False, default = False)
     owner_id = db.Column(db.Integer,db.ForeignKey('users.id'), nullable = False)
