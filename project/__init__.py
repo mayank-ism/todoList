@@ -111,6 +111,7 @@ def api_todo_list():
                 d = collections.OrderedDict()
                 d['task'] = task.task
                 d['deadline'] = unicode(task.deadline)
+                d['id'] = task.id
                 list_of_tasks.append(d)
 
             return jsonify({'task_list' : json.dumps(list_of_tasks)})
@@ -146,7 +147,9 @@ def api_delete_task(task_id):
         if to_delete is not None:
             db.session.delete(to_delete)
             db.session.commit()
-        message = 'success'
+            message = 'success'
+        else:
+            message = 'no element with task_id: ' + task_id
         success = True
     except Exception as ex:
         message = 'error in deleting ' + task_id + ", Exception: " + ex
@@ -154,18 +157,30 @@ def api_delete_task(task_id):
 
     return jsonify({'status' : success, 'message' : message})
 
-@app.route('/api/list/update/<task_id>',methods = ['PUT'])
+@app.route('/api/list/update/<task_id>',methods = ['PATCH'])
 def api_update_task(task_id):
     json_data = request.json
     try:
         to_update = List.query.filter_by(id = task_id).first()
 
         if to_update is not None:
-            to_update.task = json_data['task']
-            date = int(json_data['deadline_date'])
-            month = int(json_data['deadline_month'])
-            year = int(json_data['deadline_year'])
-            deadline = datetime.date(year,month,date)
+            if json_data.get('task'):
+                to_update.task = json_data['task']
+
+            deadline = to_update.deadline
+            if json_data.get('deadline_date'):
+                new_date = int(json_data['deadline_date'])
+                deadline = deadline.replace(date = new_date)
+            if json_data.get('deadline_month'):
+                new_month = int(json_data['deadline_month'])
+                deadline = deadline.replace(month = new_month)
+            if json_data.get('deadline_year'):
+                new_year = int(json_data['deadline_year'])
+                deadline = deadline.replace(year = new_year)
+
+            if json_data.get('completed'):
+                to_update.completed = json_data['completed']
+
             to_update.deadline = deadline
             db.session.commit()
             message = 'success'
