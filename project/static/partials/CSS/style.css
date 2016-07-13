@@ -128,7 +128,7 @@ h3 {
 	width: 40px;
 }
 
-.tick-img, .untick-img, .edit-img, .del-img {
+.tick-img, .untick-img, .edit-todo-img, .del-todo-img, .edit-done-img, .del-done-img {
 	cursor: pointer;
 	height: 20px;
 	width: 20px;

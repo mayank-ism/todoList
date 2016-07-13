@@ -63,13 +63,13 @@ def register():
   json_data = request.json
   user = User(email = json_data['email'], password = json_data['password'])
   try:
-  	db.session.add(user)
-  	db.session.commit()
+    db.session.add(user)
+    db.session.commit()
     success = True
-  	message = 'success'
+    message = 'success'
   except:
     success = False
-  	message = 'user already exists'
+    message = 'user already exists'
 
   db.session.close()
   return jsonify({'result' : success, 'message' : message})
@@ -81,13 +81,13 @@ def login():
   user = User.query.filter_by(email = json_data['email']).first()
 
   if user and bcrypt.check_password_hash(user.password, json_data['password']):
-  	session['logged_in'] = True
+    session['logged_in'] = True
     session['user_id'] = user.id
     success = True
-  	message = 'success'
+    message = 'success'
   else:
     success = False
-  	message = 'authentication error'
+    message = 'authentication error'
 
   return jsonify({'result' : success, 'message' : message})
 

@@ -9,7 +9,8 @@ todoApp.service('TaskHandlerService', ['$http', '$q', function($http, $q) {
     logout: logout,
     getAllTasks: getAllTasks,
     todo_list: todo_list,
-    done_list: done_list
+    done_list: done_list,
+    update_task: update_task
   }
 
   function getAllTasks() {
@@ -53,6 +54,32 @@ todoApp.service('TaskHandlerService', ['$http', '$q', function($http, $q) {
     });
 
     return deferred.promise;
+  }
+
+  function update_task(id, task, deadline, completed) {
+  	var deferred = $q.defer();
+
+  	var data = {
+  		task: task,
+  		deadline: deadline,
+  		completed: completed
+  	};
+  	$http.patch('/api/list/update/'+id, data, {})
+  	.success(function (data, status) {
+  		if(data.status) {
+  			deferred.resolve();
+  		}
+  		else {
+  			deferred.reject();
+  			console.log(status);
+  		}
+  	})
+  	.error(function (data, status) {
+  		deferred.reject();
+  		console.log(status);
+  	});
+
+  	return deferred.promise;
   }
 
   function logout() {

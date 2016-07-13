@@ -37,10 +37,10 @@
                     <div class="task-deadline">{{ todo_task.deadline | date }}</div>
                   </div>
                   <div class="edit-image-div">
-                    <img src="static/partials/img/edit.png" class="edit-img">
+                    <img src="static/partials/img/edit.png" class="edit-todo-img" ng-click="editTask($event)">
                   </div>
                   <div class="delete-image-div">
-                    <img src="static/partials/img/delete.png" class="del-img">
+                    <img src="static/partials/img/delete.png" class="del-todo-img" ng-click="deleteTask($event)">
                   </div>
                 </div>
               </div>
@@ -68,10 +68,10 @@
                     <div class="task-deadline">{{ done_task.deadline | date }}</div>
                   </div>
                   <div class="edit-image-div">
-                    <img src="static/partials/img/edit.png" class="edit-img">
+                    <img src="static/partials/img/edit.png" class="edit-done-img">
                   </div>
                   <div class="delete-image-div">
-                    <img src="static/partials/img/delete.png" class="del-img">
+                    <img src="static/partials/img/delete.png" class="del-done-img">
                   </div>
                 </div>
               </div>

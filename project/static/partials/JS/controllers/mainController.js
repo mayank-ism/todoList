@@ -36,7 +36,7 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
         target = target.parentNode;
       }
       if(flag) {
-        var imageElements = target.getElementsByClassName("tick-img");
+        var imageElements = target.getElementsByTagName("img");
         for(var i=0; i<imageElements.length; i++) {
           imageElements[i].style.visibility="visible";
         }
@@ -57,7 +57,7 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
         target = target.parentNode;
       }
       if(flag) {
-        var imageElements = target.getElementsByClassName("tick-img");
+        var imageElements = target.getElementsByTagName("img");
         for(var i=0; i<imageElements.length; i++) {
           imageElements[i].style.visibility="hidden";
         }
@@ -69,12 +69,15 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
 
     $scope.changeTaskStatus = function(ev) {
       var target = ev.target || ev.srcElement;
+      console.log(target.className);
       var flag = false;
-      var todo_elements = document.getElementsByClassName('tick-img');
-      var done_elements = document.getElementsByClassName('untick-img');
-      var completed = false, id, task_name, task_deadline, done;
+      var elements = document.getElementsByClassName(target.className);
+      var id, task_name, task_deadline, done, completed = false;
+      if(target.className === 'tick-img') {
+        completed = true;
+      }
       var i;
-      for(i=0; i<todo_elements.length; i++) {
+      for(i=0; i<elements.length; i++) {
         var element = todo_elements[i];
         if(element == target) {
           completed = true;
@@ -110,9 +113,18 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
         .ok('Yes')
         .cancel('Cancel');
         $mdDialog.show(confirm).then(function() {
-          
-      }, function() {
-      });
+        //   TaskHandlerService.update_task(id, task_name, task_deadline, completed).then(function() {
+        //   	if(completed) {
+        //   		// move task to done list
+        //   	}
+        //   	else {
+        //   		// move task to todo list
+        //   	}
+        //   }, function() {
+        //   	// show error message
+        //   })
+        // }, function() {
+        });
       }
     }
 
