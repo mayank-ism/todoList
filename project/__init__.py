@@ -31,6 +31,10 @@ def send_mail(recipient, message):
 def index():
     return app.send_static_file('index.html')
 
+@app.route('/todolist')
+def render_todo():
+    return app.send_static_file('todolist.html')
+
 # Remind all user of current day's task
 @app.route('/api/reminder', methods = ['GET'])
 def remind():
