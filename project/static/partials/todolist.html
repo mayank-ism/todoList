@@ -1,0 +1,95 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="static/partials/CSS/style.css">
+  <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.css">
+</head>
+<body ng-app="todoListApp">
+  <div class="todo-container">
+    <div class="logout" ng-controller="logoutController">
+      <md-button class="md-warn" ng-click="logout()">Logout</md-button>
+    </div>
+    <div class="heading">
+      <h1>Todo-List</h1>
+    </div>
+    <div class="main-body" id="main-body" ng-controller="mainController" ng-init="init()">
+      <div class="todo">
+        <div class="head">
+          <div class="head-header">
+            <h2>Todo</h2>
+          </div>
+          <div class="add-task" id="add-task">
+            <img src="static/partials/img/add-task.png" class="add-task-img" ng-click="addTaskHandler($event)">
+          </div>
+        </div>
+        <ul id="todo-list" class="todo-list">
+          <div>
+            <div id="todo-no-task-message" class="message" ng-if="!todo_list.length">
+              <h3> No tasks yet </h3>
+            </div>
+            <li ng-repeat="todo_task in todo_list" class="todo-list-entry" ng-mouseover="listHoverHandler($event)" ng-mouseleave="listLeaveHandler($event)">
+              <div class="todo-list-entry-div">
+                <div class="tick-image-div">
+                  <img src="static/partials/img/tick.png" class="tick-img" ng-click="changeTaskStatus($event)">
+                </div>
+                <div class="task-details">
+                  <div class="task-name-details">
+                    <div class="task-name">{{ todo_task.task }}</div>
+                    <div class="task-deadline">{{ todo_task.deadline | date }}</div>
+                  </div>
+                  <div class="edit-image-div">
+                    <img src="static/partials/img/edit.png" class="edit-img">
+                  </div>
+                  <div class="delete-image-div">
+                    <img src="static/partials/img/delete.png" class="del-img">
+                  </div>
+                </div>
+              </div>
+            </li>
+          </div>
+        </ul>
+      </div>
+      <div class="done">
+        <div class="head">
+          <h2>Done</h2>
+        </div>
+        <ul id="done-list" class="done-list">
+          <div>
+            <div id="done-no-task-message" class="message" ng-if="!done_list.length">
+              <h3> No tasks yet </h3>
+            </div>
+            <li ng-repeat="done_task in done_list" class="done-list-entry" ng-mouseover="listHoverHandler($event)" ng-mouseleave="listLeaveHandler($event)">
+              <div class="done-list-entry-div">
+                <div class="tick-image-div">
+                  <img src="static/partials/img/untick.png" class="untick-img" ng-click="changeTaskStatus($event)">
+                </div>
+                <div class="task-details">
+                  <div class="task-name-details">
+                    <div class="task-name">{{ done_task.task }}</div>
+                    <div class="task-deadline">{{ done_task.deadline | date }}</div>
+                  </div>
+                  <div class="edit-image-div">
+                    <img src="static/partials/img/edit.png" class="edit-img">
+                  </div>
+                  <div class="delete-image-div">
+                    <img src="static/partials/img/delete.png" class="del-img">
+                  </div>
+                </div>
+              </div>
+            </li>
+          </div>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-animate.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-aria.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.3/angular-messages.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angular_material/1.1.0-rc2/angular-material.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular-route.js"></script>
+  <script src="static/partials/JS/app.js"></script>
+  <script src="static/partials/JS/services/TaskHandlerService.js"></script>
+  <script src="static/partials/JS/controllers/mainController.js"></script>
+  <script src="static/partials/JS/controllers/logoutController.js"></script>
+</body>
+</html>
