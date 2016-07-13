@@ -121,7 +121,7 @@ def api_todo_list():
                 d['id'] = task.id
                 list_of_tasks.append(d)
 
-            return jsonify({'task_list' : json.dumps(list_of_tasks)})
+            return jsonify({'task_list' : list_of_tasks})
         else:
             json_data = request.json
             date = int(json_data['deadline_date'])
