@@ -2,8 +2,8 @@
 var toDoApp= angular.module('toDoApp');
 
 toDoApp.controller('loginController',
-  ['$scope', '$location', 'AuthService',
-  function ($scope, $location, AuthService) {
+  ['$scope', '$window', 'AuthService',
+  function ($scope, $window, AuthService) {
 
     $scope.login = function () {
 
@@ -15,7 +15,7 @@ toDoApp.controller('loginController',
       AuthService.login($scope.loginForm.email, $scope.loginForm.password)
         // handle success
         .then(function () {
-          $location.path('/');
+          $window.location.href = "/todolist";
           $scope.disabled = false;
           $scope.loginForm = {};
         })
