@@ -42,13 +42,16 @@ def render_todo():
 @app.route('/api/reminder', methods = ['GET'])
 def remind():
   all_users = User.query.all()
-  today_date = unicode(datetime.date.today())
+  today_date = unicode(datetime.date.today()).split('-')
+  today_date.reverse()
+  today_date = '-'.join(today_date)
+
   for user in all_users:
     task_list = user.tasks.all()
     count = 1
     message = "Here are the list of things to do by today:\n"
     for task in task_list:
-      deadline = unicode(task.deadline)[0:10]
+      deadline = unicode(task.deadline)
       if deadline == today_date:
          message = message + "{0}) {1}".format(count,task.task)
          count = count + 1
@@ -117,7 +120,7 @@ def api_todo_list():
       for task in all_tasks_for_user:
         d = collections.OrderedDict()
         d['task'] = task.task
-        d['deadline'] = unicode(task.deadline)
+        d['deadline'] = task.deadline
         d['id'] = task.id
         d['completed'] = task.completed
         list_of_tasks.append(d)
@@ -125,10 +128,7 @@ def api_todo_list():
       return jsonify({'task_list' : list_of_tasks})
     else:
       json_data = request.json
-      date = int(json_data['deadline_date'])
-      month = int(json_data['deadline_month'])
-      year = int(json_data['deadline_year'])
-      deadline = datetime.date(year,month,date)
+      deadline = json_data['deadline'] # deadline should be in format dd-mm-yyyy
       owner = User.query.filter_by(id = user_id).first()
 
       task = List(task = json_data['task'], deadline = deadline, owner = owner)
@@ -175,21 +175,12 @@ def api_update_task(task_id):
       if json_data.get('task'):
         to_update.task = json_data['task']
 
-      deadline = to_update.deadline
-      if json_data.get('deadline_date'):
-        new_date = int(json_data['deadline_date'])
-        deadline = deadline.replace(date = new_date)
-      if json_data.get('deadline_month'):
-        new_month = int(json_data['deadline_month'])
-        deadline = deadline.replace(month = new_month)
-      if json_data.get('deadline_year'):
-        new_year = int(json_data['deadline_year'])
-        deadline = deadline.replace(year = new_year)
+      if json_data.get('deadline'):
+        to_update.deadline = json_data['deadline']
 
       if json_data.get('completed'):
         to_update.completed = json_data['completed']
 
-      to_update.deadline = deadline
       db.session.commit()
       message = 'success'
       success = True
