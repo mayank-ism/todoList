@@ -7,10 +7,6 @@ myApp.config(function ($routeProvider) {
     controller: 'loginController',
     access: {restricted: false}
   })
-  .when('/logout', {
-    controller: 'logoutController',
-    access: {restricted: true}
-  })
   .when('/register', {
     templateUrl: 'static/partials/register.html',
     controller: 'registerController',
@@ -20,7 +16,8 @@ myApp.config(function ($routeProvider) {
    controller : function(){
     window.location.replace('/todolist');
     }, 
-    template : "<div></div>"
+    template : "<div></div>",
+    access: {restricted: true}
    });
 });
 
