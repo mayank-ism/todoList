@@ -1,6 +1,6 @@
 # project/__init__.py
 
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, redirect
 from flask_bcrypt import Bcrypt
 from flask_sqlalchemy import SQLAlchemy
 from project.config import BaseConfig
@@ -33,7 +33,10 @@ def index():
 
 @app.route('/todolist')
 def render_todo():
-    return app.send_static_file('todolist.html')
+    if session.get('logged_in'):
+        return app.send_static_file('todolist.html')
+    else:
+        return redirect('/#/login')
 
 # Remind all user of current day's task
 @app.route('/api/reminder', methods = ['GET'])
