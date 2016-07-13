@@ -128,7 +128,7 @@ def api_todo_list():
       return jsonify({'task_list' : list_of_tasks})
     else:
       json_data = request.json
-      deadline = json_data['deadline']
+      deadline = json_data['deadline'] # deadline should be in format dd-mm-yyyy
       owner = User.query.filter_by(id = user_id).first()
 
       task = List(task = json_data['task'], deadline = deadline, owner = owner)
