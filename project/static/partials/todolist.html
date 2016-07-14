@@ -34,7 +34,7 @@
                 <div class="task-details">
                   <div class="task-name-details">
                     <div class="task-name">{{ todo_task.task }}</div>
-                    <div class="task-deadline">{{ todo_task.deadline | date }}</div>
+                    <div class="task-deadline">{{ todo_task.dateObject.day + " " + todo_task.dateObject.month + ", " + todo_task.dateObject.year }}</div>
                   </div>
                   <div class="edit-image-div">
                     <img src="static/partials/img/edit.png" class="edit-todo-img" ng-click="editTask($event)">
@@ -65,13 +65,13 @@
                 <div class="task-details">
                   <div class="task-name-details">
                     <div class="task-name">{{ done_task.task }}</div>
-                    <div class="task-deadline">{{ done_task.deadline | date }}</div>
+                    <div class="task-deadline">{{ done_task.dateObject.day + " " + done_task.dateObject.month + ", " + done_task.dateObject.year }}</div>
                   </div>
                   <div class="edit-image-div">
-                    <img src="static/partials/img/edit.png" class="edit-done-img">
+                    <img src="static/partials/img/edit.png" class="edit-done-img" ng-click="editTask($event)">
                   </div>
                   <div class="delete-image-div">
-                    <img src="static/partials/img/delete.png" class="del-done-img">
+                    <img src="static/partials/img/delete.png" class="del-done-img" ng-click="deleteTask($event)">
                   </div>
                 </div>
               </div>

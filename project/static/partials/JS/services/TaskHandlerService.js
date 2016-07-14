@@ -2,6 +2,10 @@ todoApp.service('TaskHandlerService', ['$http', '$q', function($http, $q) {
   var list_of_tasks = [];
   var todo_list = [];
   var done_list = [];
+  var current_edit_task_name = "";
+  var current_edit_task_deadline = "";
+  var current_edit_task = {};
+  var current_edit_task_list = [];
 
   return {
     all_tasks: list_of_tasks,
@@ -10,7 +14,13 @@ todoApp.service('TaskHandlerService', ['$http', '$q', function($http, $q) {
     getAllTasks: getAllTasks,
     todo_list: todo_list,
     done_list: done_list,
-    update_task: update_task
+    update_task: update_task,
+    edit_Task: edit_Task,
+    delete_task: delete_task,
+    current_edit_task_deadline: current_edit_task_deadline,
+    current_edit_task_name: current_edit_task_name,
+    current_edit_task: current_edit_task,
+    current_edit_task_list: current_edit_task_list
   }
 
   function getAllTasks() {
@@ -30,38 +40,31 @@ todoApp.service('TaskHandlerService', ['$http', '$q', function($http, $q) {
   function addNewTask(task, deadlineDate) {
     var deferred = $q.defer();
 
-    var date = getDateFormat(deadlineDate);
     var data = {
       task: task,
-      deadline_date: date.day,
-      deadline_month: date.month,
-      deadline_year: date.year
+      deadline: deadlineDate
     };
 
     $http.post('/api/list', data, {})
     .success(function (data, status) {
       if(data.status) {
-        deferred.resolve();
+        deferred.resolve(data.task_id);
       }
       else {
         deferred.reject();
       }
-      console.log(data.status + ", " + data.message + ", " + status);
     })
     .error(function (data, status) {
       deferred.reject();
-      console.log(data + ", " + status);
     });
 
     return deferred.promise;
   }
 
-  function update_task(id, task, deadline, completed) {
+  function update_task(id, completed) {
   	var deferred = $q.defer();
 
   	var data = {
-  		task: task,
-  		deadline: deadline,
   		completed: completed
   	};
   	$http.patch('/api/list/update/'+id, data, {})
@@ -71,12 +74,52 @@ todoApp.service('TaskHandlerService', ['$http', '$q', function($http, $q) {
   		}
   		else {
   			deferred.reject();
-  			console.log(status);
   		}
   	})
   	.error(function (data, status) {
   		deferred.reject();
-  		console.log(status);
+  	});
+
+  	return deferred.promise;
+  }
+
+  function edit_Task(id, name, deadline) {
+  	var deferred = $q.defer();
+
+  	var data = {
+  		task: name,
+  		deadline: deadline
+  	};
+  	$http.patch('/api/list/update/'+id, data, {})
+  	.success(function (data, status) {
+  		if(data.status) {
+  			deferred.resolve(id);
+  		}
+  		else {
+  			deferred.reject();
+  		}
+  	})
+  	.error(function (data, status) {
+  		deferred.reject();
+  	});
+
+  	return deferred.promise;
+  }
+
+  function delete_task(id) {
+  	var deferred = $q.defer();
+
+  	$http.delete('/api/list/delete/'+id, {}, {})
+  	.success(function (data, status) {
+  		if(data.status) {
+  			deferred.resolve();
+  		}
+  		else {
+  			deferred.reject();
+  		}
+  	})
+  	.error(function (data, status) {
+  		deferred.reject();
   	});
 
   	return deferred.promise;
@@ -112,7 +155,6 @@ todoApp.service('TaskHandlerService', ['$http', '$q', function($http, $q) {
     }
     resultDate.month=i+1;
     resultDate.year=parts[3];
-    console.log(resultDate);
     return resultDate;
   }
 }])
