@@ -11,6 +11,7 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
         var done_list = [];
         for(index in task_list) {
           var task = task_list[index];
+          task.dateObject = getDateObject(task.deadline);
           if(task.completed) {
             done_list.push(task);
           }
@@ -22,6 +23,7 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
         TaskHandlerService.done_list = done_list;
         $scope.todo_list = todo_list;
         $scope.done_list = done_list;
+        document.getElementById('main-body').style.display="block";
       });
     };
 
@@ -41,9 +43,6 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
           imageElements[i].style.visibility="visible";
         }
       }
-      else {
-        console.log("not found");
-      }
     };
 
     $scope.listLeaveHandler = function(event) {
@@ -62,49 +61,108 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
           imageElements[i].style.visibility="hidden";
         }
       }
-      else {
-        console.log("not found");
+    }
+
+    $scope.editTask = function(ev) {
+      var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'))  && $scope.customFullscreen;
+      var target = ev.target || ev.srcElement;
+      var flag = false;
+      var elements = document.getElementsByClassName(target.className);
+      var list = $scope.done_list;
+      if(target.className === 'edit-todo-img') {
+        list = $scope.todo_list;
+      }
+      var i;
+      for(i=0; i<elements.length; i++) {
+        var element = elements[i];
+        if(element == target) {
+          flag = true;
+          TaskHandlerService.current_edit_task = list[i];
+          TaskHandlerService.current_edit_task_name = list[i].task;
+          TaskHandlerService.current_edit_task_deadline = list[i].deadline;
+          TaskHandlerService.current_edit_task_list = list;
+          break;
+        }
+      }
+      if(flag) {
+        $mdDialog.show({
+          controller: editTaskController,
+          templateUrl: 'static/partials/JS/partials/editTask.html',
+          parent: angular.element(document.body),
+          targetEvent: ev,
+          clickOutsideToClose:true,
+          fullscreen: useFullScreen
+        })
+        .then(function(answer) {
+        }, function() {
+        });
+        $scope.$watch(function() {
+          return $mdMedia('xs') || $mdMedia('sm');
+        }, function(wantsFullScreen) {
+          $scope.customFullscreen = (wantsFullScreen === true);
+        });    	
+      }
+    }
+
+    $scope.deleteTask = function(ev) {
+      var target = ev.target || ev.srcElement;
+      var flag = false;
+      var elements = document.getElementsByClassName(target.className);
+      var id, task_name, list = $scope.done_list;
+      if(target.className === 'del-todo-img') {
+        list = $scope.todo_list;
+      }
+      var i;
+      for(i=0; i<elements.length; i++) {
+        var element = elements[i];
+        if(element == target) {
+          flag = true;
+          id = list[i].id;
+          task_name = list[i].task;
+          break;
+        }
+      }
+      if(flag) {
+        var confirm = $mdDialog.confirm()
+        .title('Would you like to delete the following task?')
+        .textContent(task_name)
+        .ariaLabel('Lucky day')
+        .targetEvent(ev)
+        .ok('Yes')
+        .cancel('Cancel');
+        $mdDialog.show(confirm).then(function() {
+          TaskHandlerService.delete_task(id).then(function() {
+            // delete task from list
+            list.splice(i, 1);
+          }, function() {
+          	// show error message
+          })
+        });
       }
     }
 
     $scope.changeTaskStatus = function(ev) {
       var target = ev.target || ev.srcElement;
-      console.log(target.className);
       var flag = false;
       var elements = document.getElementsByClassName(target.className);
-      var id, task_name, task_deadline, done, completed = false;
+      var id, task_name, task_deadline, done = "undone", completed = false, list = $scope.done_list;
       if(target.className === 'tick-img') {
         completed = true;
+        done = "done";
+        list = $scope.todo_list;
       }
       var i;
       for(i=0; i<elements.length; i++) {
-        var element = todo_elements[i];
+        var element = elements[i];
         if(element == target) {
-          completed = true;
-          done = "done";
           flag = true;
-          id = $scope.todo_list[i].id;
-          task_name = $scope.todo_list[i].task;
-          task_deadline = $scope.todo_list[i].deadline;
+          id = list[i].id;
+          task_name = list[i].task;
+          task_deadline = list[i].deadline;
           break;
         }
       }
-      if(!completed) {
-        for(i=0; i<done_elements.length; i++) {
-          var element = todo_elements[i];
-          if(element == target) {
-            completed = false;
-            done = "undone";
-            flag = true;
-            id = $scope.done_list[i].id;
-            task_name = $scope.todo_list[i].task;
-            task_deadline = $scope.todo_list[i].deadline;
-            break;
-          }
-        }
-      }
-      console.log(completed + ", " + id);
-      if(id>=0 && id) {
+      if(flag) {
         var confirm = $mdDialog.confirm()
         .title('Would you like to mark the following task as ' + done + '?')
         .textContent(task_name)
@@ -113,17 +171,21 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
         .ok('Yes')
         .cancel('Cancel');
         $mdDialog.show(confirm).then(function() {
-        //   TaskHandlerService.update_task(id, task_name, task_deadline, completed).then(function() {
-        //   	if(completed) {
-        //   		// move task to done list
-        //   	}
-        //   	else {
-        //   		// move task to todo list
-        //   	}
-        //   }, function() {
-        //   	// show error message
-        //   })
-        // }, function() {
+          TaskHandlerService.update_task(id, completed).then(function() {
+          	if(completed) {
+          	  // move task to done list
+          	  $scope.done_list.push(list[i]);
+          	  list.splice(i, 1);
+          	}
+          	else {
+          	  // move task to todo list
+          	  $scope.todo_list.push(list[i]);
+          	  list.splice(i, 1);
+          	}
+          }, function() {
+          	// show error message
+          })
+        }, function() {
         });
       }
     }
@@ -150,6 +212,35 @@ todoApp.controller('mainController',['$scope', '$mdDialog', '$mdMedia', '$http',
       });
     }
   }]);
+
+function getDateObject(date) {
+  var dateObject = {};
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var parts = date.split("-");
+  dateObject.day = parts[0];
+  dateObject.month = months[parseInt(parts[1])-1];
+  dateObject.year = parts[2];
+  return dateObject;
+}
+
+function getDateFormat(date) {
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var resultDate = {};
+  var parts = date.toString().split(" ");
+  resultDate.day=parts[2];
+  for(var i=0;i<12;i++) {
+    if(parts[1] === months[i]) {
+      break;
+    }
+  }
+  i++;
+  resultDate.month = i+"";
+  if(i<=9)
+    resultDate.month="0"+resultDate.month;
+  resultDate.year=parts[3];
+  return resultDate;
+}
+
 function addTaskController($scope, $mdDialog, $http, TaskHandlerService) {
   $scope.hide = function() {
     $mdDialog.hide();
@@ -160,10 +251,15 @@ function addTaskController($scope, $mdDialog, $http, TaskHandlerService) {
   $scope.answer = function(answer) {
     $mdDialog.hide(answer);
     if(answer === "save") {
-      TaskHandlerService.addNewTask($scope.newTask.name, $scope.newTask.deadlineDate).then(function () {
+      var name = $scope.newTask.name;
+      var dateObject = getDateFormat($scope.newTask.deadlineDate);
+      var deadlineDate = dateObject.day+"-"+dateObject.month+"-"+dateObject.year;
+      TaskHandlerService.addNewTask(name, deadlineDate).then(function (task_id) {
         var newTask = {
-          task: $scope.newTask.name,
-          deadline: $scope.newTask.deadlineDate
+          id: task_id,
+          task: name,
+          deadline: deadlineDate,
+          dateObject: getDateObject(deadlineDate)
         };
         TaskHandlerService.todo_list.push(newTask);
       }, function() {
@@ -176,8 +272,75 @@ function addTaskController($scope, $mdDialog, $http, TaskHandlerService) {
           .ok('Okay')
           );
       });
-      console.log("Task name : " + $scope.newTask.name);
-      console.log("Task deadline : " + $scope.newTask.deadlineDate);
     }
   };
+}
+
+function getDateObjectFromServerDate(dateString) {
+  var dateObject = {};
+  var parts = dateString.split("-");
+  dateObject.day = parseInt(parts[0]);
+  dateObject.month = parseInt(parts[1])-1;
+  dateObject.year = parseInt(parts[2]);
+  return new Date(dateObject.year, dateObject.month, dateObject.day);
+}
+
+function editTaskController($scope, $mdDialog, $http, TaskHandlerService) {
+  var dateInstance = getDateObjectFromServerDate(TaskHandlerService.current_edit_task_deadline);
+  $scope.editTask = {
+    name: TaskHandlerService.current_edit_task_name,
+    deadlineDate: dateInstance
+  };
+  $scope.hide = function() {
+    $mdDialog.hide();
+  };
+  $scope.cancel = function() {
+    $mdDialog.cancel();
+  };
+  $scope.answer = function(answer) {
+    $mdDialog.hide(answer);
+    if(answer === "save") {
+      var name = $scope.editTask.name;
+      var dateObject = getDateFormat($scope.editTask.deadlineDate);
+      var deadlineDate = dateObject.day+"-"+dateObject.month+"-"+dateObject.year;
+      TaskHandlerService.edit_Task(TaskHandlerService.current_edit_task.id, name, deadlineDate).then(function (task_id) {
+        var newTask = {
+          id: task_id,
+          task: name,
+          deadline: deadlineDate,
+          dateObject: getDateObject(deadlineDate)
+        };
+        for(var i=0;i<TaskHandlerService.current_edit_task_list.length;i++) {
+        	if(TaskHandlerService.current_edit_task_list[i].id === task_id) {
+        		TaskHandlerService.current_edit_task_list[i] = newTask;
+        		break;
+        	}
+        }
+
+        // TaskHandlerService.todo_list.push(newTask);
+      }, function() {
+        $mdDialog.show(
+          $mdDialog.alert()
+          .clickOutsideToClose(true)
+          .title('Error')
+          .textContent('Some unknown error occured')
+          .ariaLabel('Alert Dialog Demo')
+          .ok('Okay')
+          );
+      });
+    }
+  };
+}
+
+function hyphenToSlashDate(inputDate) {
+  var outputDate = "";
+  var i, c;
+  for(i=0;i<inputDate.length;i++) {
+    c = inputDate.charAt(i);
+    if(c=='-') {
+      c = '/';
+    }
+    outputDate += c;
+  }
+  return outputDate;
 }

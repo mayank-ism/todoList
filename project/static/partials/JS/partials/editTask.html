@@ -1,0 +1,41 @@
+<md-dialog aria-label="Add new task"  ng-cloak>
+<form>
+	<md-toolbar>
+		<div class="md-toolbar-tools">
+			<h2>Edit Task</h2>
+			<span flex></span>
+			<md-button class="md-icon-button" ng-click="cancel()">
+				<md-icon md-svg-src="static/partials/img/close.svg" aria-label="Close dialog">
+				</md-icon>
+			</md-button>
+		</div>
+	</md-toolbar>
+	<md-dialog-content>
+		<div class="md-dialog-content">
+			<md-content layout-padding>
+				<div>
+					<form name="userForm">
+						<div layout-gt-xs="row">
+							<md-input-container class="md-block">
+								<label>Task Name</label>
+								<input ng-model="editTask.name">
+							</md-input-container>
+							<md-datepicker ng-model="editTask.deadlineDate" md-placeholder="Enter deadline">
+							</md-datepicker>
+						</div>
+					</form>
+				</div>
+			</md-content>
+		</div>
+	</md-dialog-content>
+	<md-dialog-actions layout="row">
+		<span flex></span>
+		<md-button ng-click="answer('cancel')">
+			Cancel
+		</md-button>
+		<md-button ng-click="answer('save')" class="md-raised md-primary">
+			Save
+		</md-button>
+	</md-dialog-actions>
+</form>
+</md-dialog>

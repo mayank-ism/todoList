@@ -138,12 +138,14 @@ def api_todo_list():
         db.session.commit()
         message = 'success'
         success = True
+        task_id = task.id
       except:
         message = 'unable to record task'
         success = False
+        task_id = -1
 
       db.session.close()
-      return jsonify({'status' : success, 'message' : message})
+      return jsonify({'status' : success, 'message' : message, 'task_id' : task_id})
   else:
     return jsonify({'status' : False, 'message' : "user must be logged in"})
 
@@ -172,13 +174,13 @@ def api_update_task(task_id):
     to_update = List.query.filter_by(id = task_id).first()
 
     if to_update is not None:
-      if json_data.get('task'):
+      if 'task' in json_data:
         to_update.task = json_data['task']
 
-      if json_data.get('deadline'):
+      if 'deadline' in json_data:
         to_update.deadline = json_data['deadline']
 
-      if json_data.get('completed'):
+      if 'completed' in json_data:
         to_update.completed = json_data['completed']
 
       db.session.commit()
